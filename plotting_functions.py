@@ -7,6 +7,7 @@ from matplotlib import cm
 from matplotlib import rc
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.colors as mcolors
+import numpy as np
 import warnings
 warnings.simplefilter('ignore')
 
@@ -170,3 +171,43 @@ def plot_diff_graph(
     plt.xticks(fontsize=13, rotation=45)
     plt.yticks(fontsize=13)
     plt.tight_layout()
+
+
+def get_parameter_pie_df(df, parameter, limit_items = 5):
+    item_freqs = pd.DataFrame(df[parameter].value_counts())
+    first_item = item_freqs.index.to_list()[0]
+    border_item = item_freqs[:limit_items].index.to_list()[-1]
+    last_item = item_freqs.index.to_list()[-1]
+    others=(item_freqs['count'].loc[border_item:last_item]).sum()   
+    pie_df=pd.DataFrame(item_freqs['count'].loc[first_item:border_item])
+    items=list(pie_df.index)
+    items.append('other')
+    pie_df = pd.concat([pie_df, pd.DataFrame({'count': {parameter: others}})])
+    pie_df.index = items 
+    return pie_df, item_freqs.index.to_list()[limit_items:] #return dataframe adopted for base pie and list of items included to others 
+    
+def compare_pie(
+    df, 
+    parameter, 
+    titles, #list of lenghth 2
+    limit_items = 5, 
+    font_size_labels = 9,
+    fontsize_title = 12
+):
+    plt.figure(figsize=(10,5))
+    values = np.linspace(0.2, 1, limit_items+1)
+    colors = cm.rainbow(values)
+    
+    df1, other = get_parameter_pie_df(df[df['metal'].isna()], parameter, limit_items)
+    ax = plt.subplot(1, 2, 1) 
+    ax.pie(df1['count'], labels=df1.index, autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
+    ax.axis('equal')
+    ax.set_title(titles[0], fontsize = fontsize_title);    
+    # plt.suptitle(', '.join(other_bases), y=0.02)
+
+    df1, other = get_parameter_pie_df(df[~df['metal'].isna()], parameter, limit_items)
+    ax = plt.subplot(1, 2, 2) 
+    ax.pie(df1['count'], labels=df1.index, autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
+    ax.axis('equal')
+    ax.set_title(titles[1], fontsize = fontsize_title);    
+    # plt.suptitle(', '.join(other_bases), y=0.02)    
