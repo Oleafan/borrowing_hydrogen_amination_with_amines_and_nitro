@@ -156,7 +156,7 @@ def plot_diff_graph(
     
     ax.set_title(title, fontsize = 15)
     ax.set_ylabel('Whole data', fontsize = 13)
-    plt.yticks(fontsize=13)
+    plt.yticks(fontsize=13, rotation=0)
 
     if rename_x_ticks_dict:
         x_ticks_l = [rename_x_ticks_dict[x] for x in x_ticks_l]
@@ -169,7 +169,7 @@ def plot_diff_graph(
     # ax.set_title('Data on catalytic activity since 2022', fontsize = 15)
     ax.set_ylabel('Data since 2022', fontsize = 13)
     plt.xticks(fontsize=13, rotation=45)
-    plt.yticks(fontsize=13)
+    plt.yticks(fontsize=13, rotation=0)
     plt.tight_layout()
 
 
@@ -211,3 +211,61 @@ def compare_pie(
     ax.axis('equal')
     ax.set_title(titles[1], fontsize = fontsize_title);    
     # plt.suptitle(', '.join(other_bases), y=0.02)    
+
+
+
+
+solvent_diel_const = """PhMe	2.4
+dioxane	2.3
+p-xylene	2.3
+THF	7.5
+diglyme	7.3
+H2O	78.2
+mesitylene	2.4
+MeCN	36.0
+trifluoroethanol	26.7
+DMF	37.1
+hexane	1.9
+o-xylene	2.6
+DMSO	46.7
+DCM	9.0
+octane	2.0
+tAmOH	15.8
+PhCF3	9.1
+DME	7.2
+anisole	4.5
+DCE	10.7
+CyH	2.0
+benzene	2.4
+PhCl	5.7
+EtOH	24.5
+m-xylene	2.4
+xylene	2.4
+MeOH	33.6
+DMA	38.3
+EtOAc	6.0
+dichlorobenzene	10.4
+PhF	5.6
+NMP	32.2
+iPrOH	18.2
+tBuOH	9.3
+heptane	1.4
+Et2O	4.4
+CHCl3	4.9
+pyridine	13.2
+ethylene diamine	16.0
+Et3N	2.5
+cymene	2.3
+PhtBu	6.4
+PhNO2	36.1
+morpholine	7.7
+nBuOH	17.8
+ethylene glycol	37
+AcOH	6.2
+MeOtBu	4.5
+propylene carbonate	62.9
+MeNO2	36.2
+BuOAc	5.0
+HFIP	16.7
+AmOH	15.8"""
+solvent_diel_const = {x.split('\t')[0]:float(x.split('\t')[1]) for x in solvent_diel_const.split('\n')}
