@@ -7,8 +7,24 @@ from matplotlib import cm
 from matplotlib import rc
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.colors as mcolors
+import numpy as np
 import warnings
 warnings.simplefilter('ignore')
+
+#for export of consolidaed data to docx 
+from docx import Document
+from docx.shared import Mm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_UNDERLINE
+from docx.enum.text import WD_COLOR_INDEX
+from docx.enum.section import WD_ORIENT
+
+import json
+from rdkit import Chem
+from rdkit.Chem import Draw
+from tqdm import tqdm
+
 
 #colormap based on YlGnBu:
 colors = [
@@ -155,7 +171,7 @@ def plot_diff_graph(
     
     ax.set_title(title, fontsize = 15)
     ax.set_ylabel('Whole data', fontsize = 13)
-    plt.yticks(fontsize=13)
+    plt.yticks(fontsize=13, rotation=0)
 
     if rename_x_ticks_dict:
         x_ticks_l = [rename_x_ticks_dict[x] for x in x_ticks_l]
@@ -168,5 +184,236 @@ def plot_diff_graph(
     # ax.set_title('Data on catalytic activity since 2022', fontsize = 15)
     ax.set_ylabel('Data since 2022', fontsize = 13)
     plt.xticks(fontsize=13, rotation=45)
-    plt.yticks(fontsize=13)
+    plt.yticks(fontsize=13, rotation=0)
     plt.tight_layout()
+
+
+def get_parameter_pie_df(df, parameter, limit_items = 5):
+    item_freqs = pd.DataFrame(df[parameter].value_counts())
+    first_item = item_freqs.index.to_list()[0]
+    border_item = item_freqs[:limit_items].index.to_list()[-1]
+    last_item = item_freqs.index.to_list()[-1]
+    others=(item_freqs['count'].loc[border_item:last_item]).sum()   
+    pie_df=pd.DataFrame(item_freqs['count'].loc[first_item:border_item])
+    items=list(pie_df.index)
+    items.append('other')
+    pie_df = pd.concat([pie_df, pd.DataFrame({'count': {parameter: others}})])
+    pie_df.index = items 
+    return pie_df, item_freqs.index.to_list()[limit_items:] #return dataframe adopted for base pie and list of items included to others 
+    
+def compare_pie(
+    df, 
+    parameter, 
+    titles, #list of lenghth 2
+    limit_items = 5, 
+    font_size_labels = 9,
+    fontsize_title = 12
+):
+    plt.figure(figsize=(10,5))
+    values = np.linspace(0.2, 1, limit_items+1)
+    colors = cm.rainbow(values)
+    
+    df1, other = get_parameter_pie_df(df[df['metal'].isna()], parameter, limit_items)
+    ax = plt.subplot(1, 2, 1) 
+    ax.pie(df1['count'], labels=df1.index, autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
+    ax.axis('equal')
+    ax.set_title(titles[0], fontsize = fontsize_title);    
+    # plt.suptitle(', '.join(other_bases), y=0.02)
+
+    df1, other = get_parameter_pie_df(df[~df['metal'].isna()], parameter, limit_items)
+    ax = plt.subplot(1, 2, 2) 
+    ax.pie(df1['count'], labels=df1.index, autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
+    ax.axis('equal')
+    ax.set_title(titles[1], fontsize = fontsize_title);    
+    # plt.suptitle(', '.join(other_bases), y=0.02)    
+
+def get_cat_leaders(df):
+    metals = list(set(df['metal'].to_list()))
+    metals = [x for x in metals if (x != '0' and x == x)]
+    metal_leaders = []
+    for metal in metals:
+        metal_df = df[df['metal'] == metal]
+        metal_df.dropna(subset = 'TON', inplace = True)
+        metal_df = metal_df[metal_df['TON']<100000000000]
+
+        record = {'metal': metal}
+        record['num_papers'] =  len(set(metal_df['doi'].to_list()))
+        # max ton maximal TON among all (TONmax(1)/T,°C/base/catalyst typea/atmosphere)
+        best = metal_df.sort_values(by = 'TON', ascending = False).to_dict('records')
+        if len(best):
+            best = best[0]
+            if 'year' not in best:
+                best['year'] = 'unknown'
+            ton = best['TON']
+            if ton==ton:
+                res = round(best['TON'])
+            else:
+                res = 'no data on TON'
+            record['max_ton'] = f'({res}/{best['temp']}°C/{best['base']}/{best['catalyst']}/{best['atm_type']}/{best['doi']}/{best['year']})'
+        else:
+            record['max_ton'] = 'no data'
+        # maximal TON among the processes with preparative yields (TONmax(2)/T,°C/base/catalyst typea/atmosphere)
+        best = metal_df[metal_df['yield']>65].sort_values(by = 'TON', ascending = False).to_dict('records')
+        if len(best):
+            best = best[0]
+            if 'year' not in best:
+                best['year'] = 'unknown'
+            ton = best['TON']
+            if ton==ton:
+                res = round(best['TON'])
+            else:
+                res = 'no data on TON'
+            record['max_ton_prep'] = f'({res}/{best['temp']}°C/{best['base']}/{best['catalyst']}/{best['atm_type']}/{best['doi']}/{best['year']})'
+        else:
+            record['max_ton_prep'] = 'no data'
+        #the lowest temperature in the presence of base (TON/Tmin(1),°C/base/catalyst typea/atmosphere)
+        best = metal_df[metal_df['yield']>65].sort_values(by = 'temp').to_dict('records')
+        if len(best):
+            best = best[0]
+            if 'year' not in best:
+                best['year'] = 'unknown'
+            ton = best['TON']
+            if ton==ton:
+                res = round(best['TON'])
+            else:
+                res = 'no data on TON'
+            record['min_temp'] = f'({res}/{best['temp']}°C/{best['base']}/{best['catalyst']}/{best['atm_type']}/{best['doi']}/{best['year']})'
+        else:
+            record['min_temp'] = 'no data'
+        #the highest TON in the absence of base (TONmax(3)/T,°C/base/catalyst typea/atmosphere)
+        best = metal_df[metal_df['base']=='no base'].sort_values(by = 'TON', ascending = False).to_dict('records')
+        if len(best):
+            best = best[0]  
+            if 'year' not in best:
+                best['year'] = 'unknown'
+            ton = best['TON']
+            if ton==ton:
+                res = round(best['TON'])
+            else:
+                res = 'no data on TON'
+            record['max_ton_no_base'] = f'({res}/{best['temp']}°C/{best['base']}/{best['catalyst']}/{best['atm_type']}/{best['doi']}/{best['year']})'
+        else:
+            record['max_ton_no_base'] = 'no data'
+            
+        #The lowest temperature in the absence of base (TON/Tmin(2),°C/base/catalyst typea/atmosphere)
+        best = metal_df.loc[metal_df['base']=='no base'].loc[metal_df['yield']>65].sort_values(by = 'temp').to_dict('records')
+        if len(best):
+            best = best[0]
+            if 'year' not in best:
+                best['year'] = 'unknown'
+            ton = best['TON']
+            if ton==ton:
+                res = round(best['TON'])
+            else:
+                res = 'no data on TON'
+            record['min_temp_no_base'] = f'({res}/{best['temp']}°C/{best['base']}/{best['catalyst']}/{best['atm_type']}/{best['doi']}/{best['year']})'
+        else:
+            record['min_temp_no_base'] = 'no data'
+        bases = metal_df[metal_df['yield']>65]['base'].value_counts().index.to_list()
+        if len(bases) > 1:
+            record['most_popular_working_bases']= bases[0:3]
+        else:
+            record['most_popular_working_bases']= bases
+        metal_leaders.append(record)
+    metal_leaders = sorted(metal_leaders, key = lambda x: x['num_papers'], reverse = True)
+    metal_leaders = [x for x in metal_leaders if x['num_papers'] > 0]
+    return metal_leaders
+
+def create_document(data, title):
+    document = Document()
+            
+    sections = document.sections
+    for section in sections:
+        section.orientation = WD_ORIENT.LANDSCAPE
+    
+    p = document.add_paragraph() 
+    run = p.add_run(title)
+    run.font.size = Pt(14)
+    paragraph_format = p.paragraph_format
+    paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = document.add_paragraph('Data stracture in all cells: (TONmax/T,°C/base/catalyst/atmosphere/doi/year/comment)') 
+    
+    col_names = ['Metal', 'Number of papers', 
+                'Maximal TON among all ', 
+                 'Maximal TON among the processes with preparative yields >65%',
+                    'The lowest temperature among all with preparative yields >65%',
+                 'The highest TON in the absence of base',
+                 'The lowest temperature in the absence of base with preparative yields >65%', 
+                'most popular working bases']
+    table = document.add_table(rows= len(data) +1 , cols=len(col_names))
+    row = table.rows[0]
+    for idx, col_name in enumerate(col_names):
+        
+        for p in row.cells[idx].iter_inner_content():
+            break
+        run = p.add_run(col_name)
+        run.bold = True
+        
+    for row_idx, item in enumerate(data):
+        row = table.rows[row_idx+1] #так как нулевой ряд - заголовок
+        row.cells[0].text = item['metal']
+        row.cells[1].text = str(item['num_papers'])
+        row.cells[2].text = str(item['max_ton'])
+        row.cells[3].text = str(item['max_ton_prep'])
+        row.cells[4].text = str(item['min_temp'])
+        row.cells[5].text = str(item['max_ton_no_base'])
+        row.cells[6].text = str(item['min_temp_no_base'])
+        row.cells[7].text = str(item['most_popular_working_bases'])
+        
+    return document
+
+
+solvent_diel_const = """PhMe	2.4
+dioxane	2.3
+p-xylene	2.3
+THF	7.5
+diglyme	7.3
+H2O	78.2
+mesitylene	2.4
+MeCN	36.0
+trifluoroethanol	26.7
+DMF	37.1
+hexane	1.9
+o-xylene	2.6
+DMSO	46.7
+DCM	9.0
+octane	2.0
+tAmOH	15.8
+PhCF3	9.1
+DME	7.2
+anisole	4.5
+DCE	10.7
+CyH	2.0
+benzene	2.4
+PhCl	5.7
+EtOH	24.5
+m-xylene	2.4
+xylene	2.4
+MeOH	33.6
+DMA	38.3
+EtOAc	6.0
+dichlorobenzene	10.4
+PhF	5.6
+NMP	32.2
+iPrOH	18.2
+tBuOH	9.3
+heptane	1.4
+Et2O	4.4
+CHCl3	4.9
+pyridine	13.2
+ethylene diamine	16.0
+Et3N	2.5
+cymene	2.3
+PhtBu	6.4
+PhNO2	36.1
+morpholine	7.7
+nBuOH	17.8
+ethylene glycol	37
+AcOH	6.2
+MeOtBu	4.5
+propylene carbonate	62.9
+MeNO2	36.2
+BuOAc	5.0
+HFIP	16.7
+AmOH	15.8"""
+solvent_diel_const = {x.split('\t')[0]:float(x.split('\t')[1]) for x in solvent_diel_const.split('\n')}
