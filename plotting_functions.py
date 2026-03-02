@@ -82,7 +82,9 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
                 sort_vertical = True, 
                 c_mp = 'Number of hits', 
                 normalize = False, 
-                tochem=True, 
+                tochem_x=True, 
+                tochem_y=True, 
+                
                 figsize=(15,5), 
                 filter_val=0,
                 rotation_x_ticks='vertical', 
@@ -107,10 +109,8 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
     y_ticks_l = data_crtab.index.values
     if y_ticks:
         y_ticks_l = y_ticks
-    
-    if tochem:
+    if tochem_y:
         y_ticks_l=[ to_chem(i) for i in y_ticks_l ]
-    
     x_ticks_l=data_crtab.columns.values
 
     if x_ticks:
@@ -118,9 +118,9 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
 
     if rename_x_ticks_dict:
         x_ticks_l = [rename_x_ticks_dict[x] for x in x_ticks_l]
-    if tochem:
+    if tochem_x:
         x_ticks_l=[ to_chem(i) for i in x_ticks_l]
-        
+    
     xlabel=cr_tab2
     if man_x_label:
         xlabel=x_label
@@ -133,7 +133,7 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
     ax.set_xlabel(xlabel, fontsize = xlabel_font)
     ax.set_title(title, fontsize = title_font)
     plt.xticks(fontsize=13, rotation=rotation_x_ticks)
-    plt.yticks(fontsize=13)
+    plt.yticks(fontsize=13, rotation = 0)
 
 def plot_diff_graph(
     data, 
