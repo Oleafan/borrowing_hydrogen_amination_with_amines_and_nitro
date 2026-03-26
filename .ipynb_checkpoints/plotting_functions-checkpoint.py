@@ -84,7 +84,6 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
                 normalize = False, 
                 tochem_x=True, 
                 tochem_y=True, 
-                
                 figsize=(15,5), 
                 filter_val=0,
                 rotation_x_ticks='vertical', 
