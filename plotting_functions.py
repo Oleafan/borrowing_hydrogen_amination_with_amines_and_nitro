@@ -72,7 +72,7 @@ def prepare_crtab(data, cr_tab1, cr_tab2, sort_vertical = True, sort_horizontal 
         data_crtab = data_crtab.T
         data_crtab['max']=data_crtab[data_crtab.columns].sum(axis=1)
         data_crtab.sort_values(by='max', ascending = False, inplace=True)
-        data_crtab=data_crtab[data_crtab['max']>filter_val]
+        # data_crtab=data_crtab[data_crtab['max']>filter_val]
         data_crtab.drop('max', axis=1,inplace=True)      
         data_crtab = data_crtab.T
     return data_crtab
@@ -142,6 +142,8 @@ def plot_diff_graph(
     figsize = (17, 8),
     xlabel = None,
     title = None,
+    title_font = 15,
+    ylabel_font = 13,
     rename_x_ticks_dict = None,
     debug = False,
     sort_vertical = True, 
@@ -168,8 +170,8 @@ def plot_diff_graph(
     ax =sns.heatmap(data_crtab_full.apply(pd.to_numeric, errors='coerce').values, xticklabels=[], yticklabels=y_ticks_l,
               cbar_kws={'label': 'number of hits'}, cmap=cmap_custom , annot =True, fmt=".0f")
     
-    ax.set_title(title, fontsize = 15)
-    ax.set_ylabel('Whole data', fontsize = 13)
+    ax.set_title(title, fontsize = title_font)
+    ax.set_ylabel('Whole data', fontsize = ylabel_font)
     plt.yticks(fontsize=13, rotation=0)
 
     if rename_x_ticks_dict:
@@ -179,13 +181,12 @@ def plot_diff_graph(
     ax =sns.heatmap(data_crtab_diff_1.fillna(0).apply(pd.to_numeric, errors='coerce').values, xticklabels=x_ticks_l, yticklabels=y_ticks_l,
               cbar_kws={'label': 'number of hits'}, cmap=cmap_custom , annot =True, fmt=".0f")
     
-    ax.set_xlabel(xlabel, fontsize = 13)
+    ax.set_xlabel(xlabel, fontsize = ylabel_font)
     # ax.set_title('Data on catalytic activity since 2022', fontsize = 15)
-    ax.set_ylabel('Data since 2022', fontsize = 13)
+    ax.set_ylabel('Data since 2022', fontsize = ylabel_font)
     plt.xticks(fontsize=13, rotation=45)
     plt.yticks(fontsize=13, rotation=0)
-    plt.tight_layout()
-
+    plt.tight_layout()      
 
 def get_parameter_pie_df(df, parameter, limit_items = 5):
     item_freqs = pd.DataFrame(df[parameter].value_counts())
