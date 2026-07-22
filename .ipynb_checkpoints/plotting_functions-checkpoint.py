@@ -172,7 +172,7 @@ def plot_diff_graph(
     
     ax.set_title(title, fontsize = title_font)
     ax.set_ylabel('Whole data', fontsize = ylabel_font)
-    plt.yticks(fontsize=13, rotation=0)
+    plt.yticks(fontsize=10, rotation=0)
 
     if rename_x_ticks_dict:
         x_ticks_l = [rename_x_ticks_dict[x] for x in x_ticks_l]
@@ -184,8 +184,8 @@ def plot_diff_graph(
     ax.set_xlabel(xlabel, fontsize = ylabel_font)
     # ax.set_title('Data on catalytic activity since 2022', fontsize = 15)
     ax.set_ylabel('Data since 2022', fontsize = ylabel_font)
-    plt.xticks(fontsize=13, rotation=45)
-    plt.yticks(fontsize=13, rotation=0)
+    plt.xticks(fontsize=10, rotation=45)
+    plt.yticks(fontsize=10, rotation=0)
     plt.tight_layout()      
 
 def get_parameter_pie_df(df, parameter, limit_items = 5):
@@ -207,24 +207,35 @@ def compare_pie(
     titles, #list of lenghth 2
     limit_items = 5, 
     font_size_labels = 9,
-    fontsize_title = 12
+    fontsize_title = 12,
+    orientation = 'horizontal'
 ):
-    plt.figure(figsize=(10,5))
+    if orientation == 'horizontal':
+        plt.figure(figsize=(10,5))
+    elif  orientation == 'vertical':
+        plt.figure(figsize=(4,7))        
     values = np.linspace(0.2, 1, limit_items+1)
     colors = cm.rainbow(values)
     
     df1, other = get_parameter_pie_df(df[df['metal'].isna()], parameter, limit_items)
-    ax = plt.subplot(1, 2, 1) 
-    ax.pie(df1['count'], labels=df1.index, autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
+    if orientation == 'horizontal':
+        ax = plt.subplot(1, 2, 1) 
+    elif  orientation == 'vertical':
+        ax = plt.subplot(2, 1, 1) 
+    ax.pie(df1['count'], labels=[to_chem(x) for x in df1.index], autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
     ax.axis('equal')
     ax.set_title(titles[0], fontsize = fontsize_title);    
     # plt.suptitle(', '.join(other_bases), y=0.02)
 
     df1, other = get_parameter_pie_df(df[~df['metal'].isna()], parameter, limit_items)
-    ax = plt.subplot(1, 2, 2) 
-    ax.pie(df1['count'], labels=df1.index, autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
+    if orientation == 'horizontal':
+        ax = plt.subplot(1, 2, 2) 
+    elif  orientation == 'vertical':
+        ax = plt.subplot(2, 1, 2) 
+    ax.pie(df1['count'], labels=[to_chem(x) for x in df1.index], autopct='%1.1f%%', textprops={'fontsize': font_size_labels}, colors=colors)
     ax.axis('equal')
     ax.set_title(titles[1], fontsize = fontsize_title);    
+    plt.tight_layout()
     # plt.suptitle(', '.join(other_bases), y=0.02)    
 
 def get_cat_leaders(df):
