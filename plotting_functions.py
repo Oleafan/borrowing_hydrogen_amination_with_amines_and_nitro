@@ -21,6 +21,7 @@ from docx.enum.text import WD_COLOR_INDEX
 from docx.enum.section import WD_ORIENT
 
 import json
+import os
 from rdkit import Chem
 from rdkit.Chem import Draw
 from tqdm import tqdm
@@ -40,6 +41,29 @@ colors = [
 
 # Создаем цветовую карту
 cmap_custom = LinearSegmentedColormap.from_list('custom_YlGnBu', colors, N=256)
+
+# borders between heatmap cells (reviewer: cells should be clearly separated, like in a table)
+GRID_COLOR = '#7a7a7a'
+GRID_LW = 0.6
+
+
+def _annot_labels(values, fmt='{:.0f}', hide_zeros=True):
+    """Text labels for heatmap cells; zero (and NaN) cells get no label if hide_zeros."""
+    values = np.asarray(values, dtype=float)
+    labels = np.empty(values.shape, dtype=object)
+    for idx, v in np.ndenumerate(values):
+        labels[idx] = '' if (hide_zeros and (v == 0 or np.isnan(v))) else fmt.format(v)
+    return labels
+
+
+def _frame(ax, color=GRID_COLOR, lw=GRID_LW):
+    """Outer frame of a heatmap drawn with the axes spines (seaborn's cell edges
+    at the bottom and right borders are clipped by the axes)."""
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_color(color)
+        spine.set_linewidth(lw)
+        spine.set_zorder(6)
 
 def to_chem (s):
     #Returns Latex formatted data to adequately displa chemical formulas like K2CO3
@@ -94,7 +118,10 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
                 man_x_label=False,
                 x_label='', 
                 sort_horizontal = False,
-                rename_x_ticks_dict = None
+                rename_x_ticks_dict = None,
+                grid_color = GRID_COLOR,
+                grid_lw = GRID_LW,
+                hide_zeros = True
                ):
     """This function get a dataframe (data), which was filtered to display only desired data.It makes a crosstab using a  
     cr_tab1, cr_tab2 as names for the columns. cr_tab1 becomes y, cr_tab2 -  х. Then it plots a 2d histogram """
@@ -126,8 +153,13 @@ def d3_diagram (data, cr_tab1, cr_tab2, title,
  
     fig = plt.figure(figsize=figsize)
     
+    annot_fmt = '{:g}' if normalize else '{:.0f}'
     ax=sns.heatmap(data_crtab.values, xticklabels=x_ticks_l, yticklabels=y_ticks_l,
-              cbar_kws={'label': c_mp}, cmap=cmap_custom, annot =True, fmt="d")
+              cbar_kws={'label': c_mp}, cmap=cmap_custom,
+              annot=_annot_labels(data_crtab.values, annot_fmt, hide_zeros), fmt="",
+              linewidths=grid_lw, linecolor=grid_color)
+    if grid_lw:
+        _frame(ax, grid_color, grid_lw)
     
     ax.set_xlabel(xlabel, fontsize = xlabel_font)
     ax.set_title(title, fontsize = title_font)
@@ -147,7 +179,10 @@ def plot_diff_graph(
     rename_x_ticks_dict = None,
     debug = False,
     sort_vertical = True, 
-    sort_horizontal = True
+    sort_horizontal = True,
+    grid_color = GRID_COLOR,
+    grid_lw = GRID_LW,
+    hide_zeros = True
                    ):
 
     data_crtab_full = prepare_crtab(data, crtab_1, crtab_2, filter_val = filter_val, sort_vertical =sort_vertical ,  sort_horizontal = sort_horizontal )
@@ -165,27 +200,40 @@ def plot_diff_graph(
         return data_crtab_full, data_crtab_diff, data_crtab_diff_1
 
     data_crtab_diff_1.fillna(0, inplace = True)
-    plt.figure(figsize=figsize)
-    plt.subplot(2, 1, 1)
-    ax =sns.heatmap(data_crtab_full.apply(pd.to_numeric, errors='coerce').values, xticklabels=[], yticklabels=y_ticks_l,
-              cbar_kws={'label': 'number of hits'}, cmap=cmap_custom , annot =True, fmt=".0f")
-    
-    ax.set_title(title, fontsize = title_font)
-    ax.set_ylabel('Whole data', fontsize = ylabel_font)
-    plt.yticks(fontsize=10, rotation=0)
-
+    full_values = data_crtab_full.apply(pd.to_numeric, errors='coerce').values
+    diff_values = data_crtab_diff_1.fillna(0).apply(pd.to_numeric, errors='coerce').values
     if rename_x_ticks_dict:
         x_ticks_l = [rename_x_ticks_dict[x] for x in x_ticks_l]
-    
-    plt.subplot(2, 1, 2)
-    ax =sns.heatmap(data_crtab_diff_1.fillna(0).apply(pd.to_numeric, errors='coerce').values, xticklabels=x_ticks_l, yticklabels=y_ticks_l,
-              cbar_kws={'label': 'number of hits'}, cmap=cmap_custom , annot =True, fmt=".0f")
-    
-    ax.set_xlabel(xlabel, fontsize = ylabel_font)
-    # ax.set_title('Data on catalytic activity since 2022', fontsize = 15)
-    ax.set_ylabel('Data since 2022', fontsize = ylabel_font)
-    plt.xticks(fontsize=10, rotation=45)
-    plt.yticks(fontsize=10, rotation=0)
+
+    # one common color scale for 'whole data' and 'data since 2022' and one colorbar
+    vmax = np.nanmax([np.nanmax(full_values), np.nanmax(diff_values)]) if full_values.size else 1
+    fig = plt.figure(figsize=figsize)
+    gs = fig.add_gridspec(2, 2, width_ratios=[1, 0.015], wspace=0.03)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[1, 0])
+    cax = fig.add_subplot(gs[:, 1])
+
+    sns.heatmap(full_values, ax=ax1, xticklabels=[], yticklabels=y_ticks_l,
+                cmap=cmap_custom, vmin=0, vmax=vmax, cbar=False,
+                annot=_annot_labels(full_values, hide_zeros=hide_zeros), fmt="",
+                linewidths=grid_lw, linecolor=grid_color)
+    if grid_lw:
+        _frame(ax1, grid_color, grid_lw)
+    ax1.set_title(title, fontsize = title_font)
+    ax1.set_ylabel('Whole data', fontsize = ylabel_font)
+    ax1.tick_params(axis='y', labelsize=10, rotation=0)
+
+    sns.heatmap(diff_values, ax=ax2, xticklabels=x_ticks_l, yticklabels=y_ticks_l,
+                cmap=cmap_custom, vmin=0, vmax=vmax, cbar=True, cbar_ax=cax,
+                cbar_kws={'label': 'number of hits'},
+                annot=_annot_labels(diff_values, hide_zeros=hide_zeros), fmt="",
+                linewidths=grid_lw, linecolor=grid_color)
+    if grid_lw:
+        _frame(ax2, grid_color, grid_lw)
+    ax2.set_xlabel(xlabel, fontsize = ylabel_font)
+    ax2.set_ylabel('Data since 2022', fontsize = ylabel_font)
+    ax2.tick_params(axis='y', labelsize=10, rotation=0)
+    plt.setp(ax2.get_xticklabels(), fontsize=10, rotation=45)
     plt.tight_layout()      
 
 def get_parameter_pie_df(df, parameter, limit_items = 5):
@@ -429,3 +477,230 @@ BuOAc	5.0
 HFIP	16.7
 AmOH	15.8"""
 solvent_diel_const = {x.split('\t')[0]:float(x.split('\t')[1]) for x in solvent_diel_const.split('\n')}
+
+def _crosstab_whole_and_new(data, y, x, filter_val, year_split=2022):
+    """Crosstab y x x for the whole data and for data since year_split (same rows/columns).
+    Rows (y values) appeared not more than filter_val times in the whole data are neglected."""
+    full = pd.crosstab(data[y], data[x])
+    full = full.loc[full.sum(axis=1).sort_values(ascending=False, kind='stable').index]
+    full = full[full.sum(axis=1) > filter_val]
+    new_data = data[data['year'] >= year_split]
+    new = pd.crosstab(new_data[y], new_data[x])
+    new = new.reindex(index=full.index, columns=full.columns, fill_value=0)
+    return full, new
+
+
+def _draw_cell_grid(ax, n_rows, n_cols, color, lw):
+    """Borders around every cell, including empty (masked) ones.
+    Inner borders are lines; the outer frame is the axes frame (spines), which is never clipped."""
+    if n_rows > 1:
+        ax.hlines(np.arange(1, n_rows), 0, n_cols, colors=color, linewidth=lw, zorder=5)
+    if n_cols > 1:
+        ax.vlines(np.arange(1, n_cols), 0, n_rows, colors=color, linewidth=lw, zorder=5)
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_color(color)
+        spine.set_linewidth(lw)
+        spine.set_zorder(6)
+
+
+def plot_heatmap_grid(
+    panels,
+    y='base',
+    fig_width=7.0,
+    layout='side',
+    cell_h=None,
+    cbar_label='Number of successful reactions',
+    col_titles=('Whole data', 'Data since 2022'),
+    year_split=2022,
+    temp_step=10,
+    annot_fontsize=6.5,
+    tick_fontsize=7,
+    panel_label_fontsize=9,
+    xlabel_fontsize=8,
+    grid_color=GRID_COLOR,
+    grid_lw=0.5,
+    figsize=None,   # ignored: the figure size is calculated from fig_width and cell_h
+    panel_w=None,   # ignored (old parameter)
+):
+    """Several 'whole data / data since 2022' heatmaps combined in one figure.
+
+    The figure is built in its final (print) size: fig_width is the width in inches
+    (about 7 in for a full page width, 3.3 in for one column), font sizes are real points.
+    Save it with fig.savefig(..., dpi=600, bbox_inches='tight') and insert at 100% width.
+
+    layout = 'side'    - 'whole data' and 'data since 2022' side by side;
+             'stacked' - 'data since 2022' below 'whole data', every block uses the full width.
+    One common color scale and one colorbar for all heatmaps, empty cells instead of zeros,
+    short panel labels (e.g. 'a) Ni'), borders around all cells. All blocks have the same width;
+    the cell width is the block width / number of columns, the cell height is fixed (cell_h, inches).
+
+    panels: list of dicts with keys
+        'data'       - dataframe with successful reactions only (must contain y, x and 'year'),
+        'x'          - column for the x axis, e.g. 'num_temp_range' or 'metal',
+        'label'      - short panel label, e.g. 'a) Ni',
+        'filter_val' - rows (y values) appeared not more than filter_val times are neglected (default 0),
+        'x_label'    - optional x-axis title (default: 'Temperature range, °C' for 'num_temp_range',
+                       otherwise the column name capitalized).
+    If all panels use the same x column, the same set of columns is used in all panels and
+    the x tick labels are shown only under the last block.
+    """
+    tables = [_crosstab_whole_and_new(p['data'], y, p['x'], p.get('filter_val', 0), year_split)
+              for p in panels]
+    is_temp = [p['x'] == 'num_temp_range' for p in panels]
+    shared_x = len(set(p['x'] for p in panels)) == 1
+
+    def x_values(full_tables, temp):
+        cols = set().union(*[set(f.columns) for f in full_tables])
+        if temp:
+            return list(range(min(cols), max(cols) + 1))
+        return sorted(cols, key=lambda m: (m == 'no metal', str(m)))
+
+    if shared_x:
+        common = x_values([full for full, _ in tables], is_temp[0])
+        columns = [common] * len(panels)
+    else:
+        columns = [x_values([full], temp) for (full, _), temp in zip(tables, is_temp)]
+
+    def x_tick_labels(cols, temp):
+        if temp:
+            return [f'[{b*temp_step},{(b+1)*temp_step})' for b in cols]
+        return [str(c) for c in cols]
+
+    vmax = max(full.values.max() for full, _ in tables)  # one color scale for everything
+
+    # ---- layout in inches (final print size) ----
+    pt = 1 / 72
+    if cell_h is None:
+        cell_h = annot_fontsize * 1.9 * pt
+    max_ylab = max(len(str(b)) for full, _ in tables for b in full.index)
+    max_panel_lab = max(len(p['label']) for p in panels)
+    left = (max_panel_lab * panel_label_fontsize * 0.62 + max_ylab * tick_fontsize * 0.5 + 10) * pt
+    cbar_space = 0.62
+    col_gap = 0.10
+    title_h = (xlabel_fontsize + 5) * pt
+    max_xlab = max(len(l) for cols, temp in zip(columns, is_temp) for l in x_tick_labels(cols, temp))
+    xlab_space = (max_xlab * tick_fontsize * 0.55 * 0.72 + xlabel_fontsize + 16) * pt
+    gap_small = 0.07
+
+    if layout == 'side':
+        block_w = (fig_width - left - col_gap - cbar_space) / 2
+    elif layout == 'stacked':
+        block_w = fig_width - left - cbar_space
+    else:
+        raise ValueError("layout must be 'side' or 'stacked'")
+
+    # numbers must fit into the narrowest cells: reduce the font if needed (one font for the whole figure)
+    max_digits = max(len(str(int(t.values.max()))) for pair in tables for t in pair if t.size)
+    min_cell_w = block_w / max(len(c) for c in columns) / pt          # in points
+    annot_fontsize = min(annot_fontsize, (min_cell_w - 1.5) / (max_digits * 0.6))
+
+    # blocks: (panel index, 0 = whole / 1 = since 2022, x0, height, title, show x tick labels, gap below)
+    blocks = []
+    n = len(panels)
+    for r in range(n):
+        h = max(len(tables[r][0]), 1) * cell_h
+        last = r == n - 1
+        show_x = (not shared_x) or last
+        gap_after = xlab_space if show_x else gap_small
+        if layout == 'side':
+            for c in (0, 1):
+                blocks.append(dict(r=r, c=c, x0=left + c * (block_w + col_gap), h=h, row=r,
+                                   title=col_titles[c] if r == 0 else None, show_x=show_x, gap=gap_after))
+        else:
+            blocks.append(dict(r=r, c=0, x0=left, h=h, row=2 * r, title=col_titles[0],
+                               show_x=False, gap=gap_small))
+            blocks.append(dict(r=r, c=1, x0=left, h=h, row=2 * r + 1, title=col_titles[1],
+                               show_x=show_x, gap=gap_after))
+
+    # vertical positions (rows of blocks)
+    rows = sorted(set(b['row'] for b in blocks))
+    row_h = {b['row']: b['h'] for b in blocks}
+    row_gap = {b['row']: b['gap'] for b in blocks}
+    row_title = {b['row']: any(bb['title'] for bb in blocks if bb['row'] == b['row']) for b in blocks}
+    y = 0.05
+    row_top = {}
+    for rr in rows:
+        y += title_h if row_title[rr] else 0
+        row_top[rr] = y
+        y += row_h[rr] + row_gap[rr]
+    fig_h = y
+    fig = plt.figure(figsize=(fig_width, fig_h))
+
+    axes = np.empty((n, 2), dtype=object)
+    for b in blocks:
+        r, c = b['r'], b['c']
+        panel, cols, temp = panels[r], columns[r], is_temp[r]
+        top = row_top[b['row']]
+        ax = fig.add_axes([b['x0'] / fig_width, 1 - (top + b['h']) / fig_h, block_w / fig_width, b['h'] / fig_h])
+        axes[r, c] = ax
+        table = tables[r][c].reindex(columns=cols, fill_value=0)
+        sns.heatmap(table, ax=ax, mask=(table == 0), cmap=cmap_custom, vmin=0, vmax=vmax,
+                    annot=True, fmt='d', annot_kws={'fontsize': annot_fontsize}, cbar=False)
+        _draw_cell_grid(ax, table.shape[0], table.shape[1], grid_color, grid_lw)
+        ax.set_facecolor('white')
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+        ax.tick_params(length=0, pad=2)
+        if b['x0'] == left:   # left column of blocks: base names and panel label
+            ax.set_yticks(np.arange(table.shape[0]) + 0.5)
+            ax.set_yticklabels([to_chem(v) for v in table.index], rotation=0, fontsize=tick_fontsize)
+            if c == 0:
+                ax.set_ylabel(panel['label'], rotation=0, ha='right', va='center',
+                              fontsize=panel_label_fontsize, fontweight='bold', labelpad=4)
+        else:
+            ax.set_yticks([])
+        if b['title']:
+            ax.set_title(b['title'], fontsize=xlabel_fontsize, pad=3,
+                         loc='center' if layout == 'side' else 'left')
+        if b['show_x']:
+            ax.set_xticks(np.arange(len(cols)) + 0.5)
+            ax.set_xticklabels(x_tick_labels(cols, temp), rotation=45, ha='right',
+                               rotation_mode='anchor', fontsize=tick_fontsize)
+            default_label = 'Temperature range, °C' if temp else panel['x'].capitalize()
+            ax.set_xlabel(panel.get('x_label', default_label), fontsize=xlabel_fontsize, labelpad=2)
+        else:
+            ax.set_xticks([])
+
+    # one common colorbar, vertically centered on the heatmaps
+    first_top = row_top[rows[0]]
+    last_bottom = row_top[rows[-1]] + row_h[rows[-1]]
+    cb_h = min(2.2, last_bottom - first_top)
+    cb_top = (first_top + last_bottom - cb_h) / 2
+    cb_x = left + (2 * block_w + col_gap if layout == 'side' else block_w) + 0.12
+    cax = fig.add_axes([cb_x / fig_width, 1 - (cb_top + cb_h) / fig_h, 0.09 / fig_width, cb_h / fig_h])
+    sm = plt.cm.ScalarMappable(cmap=cmap_custom, norm=plt.Normalize(vmin=0, vmax=vmax))
+    cbar = fig.colorbar(sm, cax=cax)
+    cbar.set_label(cbar_label, fontsize=xlabel_fontsize - 0.5)
+    cbar.ax.tick_params(labelsize=tick_fontsize - 0.5, length=2)
+    cbar.outline.set_linewidth(grid_lw)
+    return fig, axes
+
+
+# ---------------------------------------------------------------------------
+# saving figures for the manuscript
+FIGURES_DIR = 'figures'
+
+
+def save_fig(name, fig=None, folder=FIGURES_DIR, dpi=600, fmt='png', axes=None):
+    """Save a figure in high resolution to folder/name.fmt (folder is created if needed).
+
+    name  - file name without extension, e.g. 'Figure 12' or 'Figure 21a' (as in the manuscript)
+    fig   - figure to save (default: the current figure)
+    axes  - optional list of axes: only the area of these axes (with their labels) is saved,
+            e.g. one panel of a multi-panel figure
+    Call it before plt.show() (after plt.show() the current figure is a new empty one).
+    """
+    fig = fig if fig is not None else plt.gcf()
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, f'{name}.{fmt}')
+    if axes is None:
+        fig.savefig(path, dpi=dpi, bbox_inches='tight')
+    else:
+        from matplotlib.transforms import Bbox
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        bbox = Bbox.union([a.get_tightbbox(renderer) for a in axes])
+        bbox = bbox.transformed(fig.dpi_scale_trans.inverted()).padded(0.05)
+        fig.savefig(path, dpi=dpi, bbox_inches=bbox)
+    return path
