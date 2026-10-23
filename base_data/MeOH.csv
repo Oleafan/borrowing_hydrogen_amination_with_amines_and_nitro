@@ -179,20 +179,25 @@ doi	N_source	solvent	N_amount	MeOH_amount	MeOH/N_ratio	base	base_amount	base_rat
 10.1021/acs.orglett.2c03595	nitroarene	PhMe	1.0	6.18	6.18	Cs2CO3	0.5	0.5	MnBr(CO)5	Mn	3 mol% bis(2-(diphenylphosphaneyl)ethyl)amine	Ar	3.0	150	24	88	0	29.33333333333333		2022	True	15	[150,160)	88
 10.1021/acs.orglett.2c03595	nitroarene	PhMe	1.0	6.18	6.18	Cs2CO3	0.5	0.5	MnBr(CO)5	Mn	3 mol% bis(2-(diphenylphosphaneyl)ethyl)amine	Ar	2.0	150	24	70	0	35.0		2022	True	15	[150,160)	70
 10.1039/c7qo01061c	aniline	MeOH	0.8	24.7	30.875	MeONa	0.8	1.0	Ru_10	Ru	no	Ar	1.0	110	15	95	0	95.0		2018	True	11	[110,120)	95
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	NaOH	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	14	0	14.0		2018	False	15	[150,160)	14
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	MeOLi	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	34	0	34.0		2018	False	15	[150,160)	34
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	MeONa	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	52	0	52.0		2018	False	15	[150,160)	52
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	MeOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	54	0	54.0		2018	False	15	[150,160)	54
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOLi	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	35	0	35.0		2018	False	15	[150,160)	35
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuONa	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	89	0	89.0		2018	True	15	[150,160)	89
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	96	0	96.0		2018	True	15	[150,160)	96
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.2	0.1	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	150	5	78	0	78.0		2018	True	15	[150,160)	78
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	140	5	77	0	77.0		2018	True	14	[140,150)	77
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	1.0	130	5	44	0	44.0		2018	False	13	[130,140)	44
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuCl2(PPh3)3	Ru	no	Ar	1.0	150	5	1	0	1.0		2018	False	15	[150,160)	1
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(PPh3)3	Ru	no	Ar	1.0	150	5	1	0	1.0		2018	False	15	[150,160)	1
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	[RuCl2(bis(2-(diphenylphosphaneyl)ethyl)amine)]2	Ru	no	Ar	1.0	150	5	48	0	48.0		2018	False	15	[150,160)	48
-10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)ethylamine)	Ru	no	Ar	1.0	150	5	52	0	52.0		2018	False	15	[150,160)	52
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	NaOH	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	14	0	140.0		2018	False	15	[150,160)	14
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	MeOLi	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	34	0	340.0		2018	False	15	[150,160)	34
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	MeONa	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	52	0	520.0		2018	False	15	[150,160)	52
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	MeOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	54	0	540.0		2018	False	15	[150,160)	54
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOLi	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	35	0	350.0		2018	False	15	[150,160)	35
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuONa	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	89	0	890.0		2018	True	15	[150,160)	89
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	96	0	960.0		2018	True	15	[150,160)	96
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.2	0.1	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	78	0	780.0		2018	True	15	[150,160)	78
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	140	5	77	0	770.0		2018	True	14	[140,150)	77
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	130	5	44	0	440.0		2018	False	13	[130,140)	44
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuCl2(PPh3)3	Ru	no	Ar	0.1	150	5	1	0	10.0		2018	False	15	[150,160)	1
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(PPh3)3	Ru	no	Ar	0.1	150	5	1	0	10.0		2018	False	15	[150,160)	1
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	[RuCl2(bis(2-(diphenylphosphaneyl)ethyl)amine)]2	Ru	no	Ar	0.1	150	5	48	0	480.0		2018	False	15	[150,160)	48
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)ethylamine)	Ru	no	Ar	0.1	150	5	52	0	520.0		2018	False	15	[150,160)	52
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.2	0.1	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.1	150	5	96	0	960.0		2018	True	15	[150,160)	96
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.2	0.1	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.05	150	5	80	0	1600.0		2018	True	15	[150,160)	80
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.2	0.1	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.02	150	5	43	0	2150.0		2018	False	15	[150,160)	43
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.02	150	5	72	0	3600.0		2018	True	15	[150,160)	72
+10.1021/acs.orglett.8b01449	aniline	MeOH	2.0	88.92	44.46	tBuOK	0.4	0.2	RuH(CO)Cl(bis(2-(diphenylphosphaneyl)ethyl)amine)	Ru	no	Ar	0.02	150	16	98	0	4900.0		2018	True	15	[150,160)	98
 10.1002/anie.201814146	nitroarene	MeOH	1.0	37.0	37.0	KOH	1.05	1.05	Pd(OAc)2	Pd	4 mol% L1	Ar	1.0	80	5	83	0	83.0		2019	True	8	[80,90)	83
 10.1002/anie.201814146	nitroarene	MeOH	1.0	37.0	37.0	KOH	1.0	1.0	Pd(OAc)2	Pd	4 mol% L1	Ar	1.0	80	5	81	0	81.0		2019	True	8	[80,90)	81
 10.1002/anie.201814146	nitroarene	MeOH	1.0	37.0	37.0	KOH	1.1	1.1	Pd(OAc)2	Pd	4 mol% L1	Ar	1.0	80	5	80	0	80.0		2019	True	8	[80,90)	80
